@@ -1,1 +1,350 @@
 
+/* =================================
+   REINO DE LAS SOMBRAS
+   DISEÑO GENERAL
+================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: #101b19;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* =================================
+   INTERFAZ SUPERIOR
+================================= */
+
+#hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.game-title {
+    font-size: 23px;
+    font-weight: bold;
+    color: #f6d77a;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 5px black;
+    margin-bottom: 12px;
+}
+
+.stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.stat {
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(246, 215, 122, 0.5);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.stat strong {
+    color: #f6d77a;
+}
+
+/* =================================
+   MENU PRINCIPAL
+================================= */
+
+#startScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(4, 13, 12, 0.72);
+    backdrop-filter: blur(5px);
+}
+
+.menu-box {
+    width: 90%;
+    max-width: 520px;
+
+    padding: 40px 30px;
+
+    background: rgba(10, 23, 21, 0.96);
+
+    border: 2px solid #c9a653;
+    border-radius: 16px;
+
+    text-align: center;
+
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+}
+
+.subtitle {
+    color: #c9a653;
+    letter-spacing: 4px;
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+
+.menu-box h1 {
+    color: #f5d77e;
+    font-size: 30px;
+    margin-bottom: 18px;
+}
+
+.description {
+    color: #d0d8d1;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+.instructions {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 18px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.instructions p {
+    color: #e0e0e0;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.instructions strong {
+    color: #f5d77e;
+}
+
+/* =================================
+   BOTONES
+================================= */
+
+button {
+    border: none;
+    padding: 16px 28px;
+
+    background: linear-gradient(
+        135deg,
+        #b38b37,
+        #f3d47a
+    );
+
+    color: #172019;
+
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 1px;
+
+    border-radius: 8px;
+    cursor: pointer;
+
+    transition: transform 0.2s, filter 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    filter: brightness(1.12);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* =================================
+   MENSAJES
+================================= */
+
+#message {
+    position: absolute;
+
+    top: 22%;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 3;
+
+    color: #ffe58a;
+    font-size: 22px;
+    font-weight: bold;
+
+    text-shadow: 2px 2px 5px black;
+
+    pointer-events: none;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* =================================
+   CONTROLES INFERIORES
+================================= */
+
+#controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 2;
+
+    background: rgba(0, 0, 0, 0.75);
+
+    padding: 12px 20px;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+    color: #ffffff;
+
+    text-align: center;
+    white-space: nowrap;
+
+    pointer-events: none;
+}
+
+/* =================================
+   CARGA
+================================= */
+
+#loading {
+    position: fixed;
+    inset: 0;
+
+    z-index: 20;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #101b19;
+
+    color: #f5d77e;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-align: center;
+    padding: 20px;
+}
+
+#loading.hidden {
+    display: none;
+}
+
+/* =================================
+   PANTALLAS PEQUEÑAS
+================================= */
+
+@media (max-width: 600px) {
+
+    .game-title {
+        font-size: 17px;
+    }
+
+    .menu-box {
+        padding: 28px 18px;
+    }
+
+    .menu-box h1 {
+        font-size: 23px;
+    }
+
+    #controls {
+        font-size: 10px;
+        width: 95%;
+        white-space: normal;
+    }
+
+    .stat {
+        font-size: 12px;
+        padding: 9px;
+    }
+}
+/* =================================
+   NUEVO: MENUS, BARRAS Y EFECTOS
+================================= */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(4, 13, 12, 0.72);
+    backdrop-filter: blur(5px);
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.bar {
+    width: 100%;
+    height: 8px;
+    margin-top: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar div {
+    height: 100%;
+    transition: width 0.2s;
+}
+
+#healthFill {
+    background: linear-gradient(90deg, #c0392b, #ff6b6b);
+}
+
+#xpFill {
+    background: linear-gradient(90deg, #2d9cdb, #7be0ff);
+}
+
+.upgrade-btn {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 14px 18px;
+    text-align: left;
+}
+
+.upgrade-btn small {
+    display: block;
+    margin-top: 4px;
+    font-weight: normal;
+    letter-spacing: 0;
+    opacity: 0.8;
+}
+
+#hurtFlash {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(circle, transparent 45%, rgba(200, 0, 0, 0.65));
+    transition: opacity 0.35s;
+}
+
+#hurtFlash.show {
+    opacity: 1;
+    transition: none;
+}
