@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reino de las Sombras</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: #0c0e17;
+      color: #f3f4f6;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 12px;
+      gap: 10px;
+    }
+
+    .hud {
+      width: 960px;
+      max-width: 100%;
+      background: #171b2b;
+      border: 2px solid #2e3654;
+      border-radius: 10px;
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .stat-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .badge {
+      background: #232940;
+      border: 1px solid #3a4469;
+      padding: 5px 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hp-bar-wrap {
+      width: 130px;
+      height: 14px;
+      background: #2b1622;
+      border: 1px solid #6e273d;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .hp-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      transition: width 0.15s ease;
+    }
+
+    .xp-bar-wrap {
+      width: 110px;
+      height: 10px;
+      background: #172338;
+      border: 1px solid #2c4c7e;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .xp-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      transition: width 0.15s ease;
+    }
+
+    .build-panel {
+      width: 960px;
+      max-width: 100%;
+      background: #171b2b;
+      border: 2px solid #2e3654;
+      border-radius: 10px;
+      padding: 8px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .build-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button.build-btn {
+      background: #26304d;
+      color: #f8fafc;
+      border: 1px solid #47588a;
+      border-radius: 7px;
+      padding: 6px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.08s ease, background 0.15s ease, opacity 0.15s ease;
+    }
+
+    button.build-btn:hover:not(:disabled) {
+      background: #34426b;
+      transform: translateY(-1px);
+    }
+
+    button.build-btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    button.build-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    button.build-btn.built {
+      background: #1d3b2b;
+      border-color: #2f7a52;
+      color: #86efac;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      width: 960px;
+      max-width: 100%;
+      border: 2px solid #333d61;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #12172b;
+    }
+
+    .controls-hint {
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+    }
+
+    .controls-hint span {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="stat-group">
+      <div class="badge">⚔️ Nv. <span id="lvlText">1</span></div>
+      <div>
+        <div style="font-size:11px; color:#fca5a5; margin-bottom:2px;">VIDA: <span id="hpText">100/100</span></div>
+        <div class="hp-bar-wrap"><div id="hpBar" class="hp-bar"></div></div>
+      </div>
+      <div>
+        <div style="font-size:11px; color:#93c5fd; margin-bottom:2px;">EXP: <span id="xpText">0/50</span></div>
+        <div class="xp-bar-wrap"><div id="xpBar" class="xp-bar"></div></div>
+      </div>
+    </div>
+
+    <div class="stat-group">
+      <div class="badge">🪵 Madera: <span id="woodText">0</span></div>
+      <div class="badge">🪨 Piedra: <span id="stoneText">0</span></div>
+      <div class="badge">💀 Derrotados: <span id="killsText">0</span></div>
+    </div>
+  </div>
+
+  <div class="build-panel">
+    <div>
+      🏰 <strong>Construcción del Castillo</strong> <span style="color:#94a3b8;">(también puedes pulsar <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>)</span>
+    </div>
+    <div class="build-buttons">
+      <button id="btnTowerLeft" class="build-btn" onclick="buildPart('towerLeft')">
+        [1] Torre Oeste (🪵3 🪨2)
+      </button>
+      <button id="btnWall" class="build-btn" onclick="buildPart('wall')">
+        [2] Muralla Real (🪵5 🪨5)
+      </button>
+      <button id="btnKeep" class="build-btn" onclick="buildPart('keep')">
+        [3] Torreón Sombrío (🪵8 🪨8)
+      </button>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="game" width="960" height="480"></canvas>
+  </div>
+
+  <div class="controls-hint">
+    <span>A / D</span> o <span>← / →</span>: Mover &nbsp;|&nbsp;
+    <span>W / ↑ / Espacio</span>: Saltar &nbsp;|&nbsp;
+    <span>J / Z / Clic</span>: Atacar con espada &nbsp;|&nbsp;
+    <span>R</span>: Reiniciar si caes en combate
+  </div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const GROUND_Y = 410;
+    const GRAVITY = 1550;
+
+    // Estado del jugador
+    const player = {
+      x: 90,
+      y: GROUND_Y - 44,
+      w: 32,
+      h: 44,
+      vx: 0,
+      vy: 0,
+      speed: 255,
+      jumpForce: 610,
+      onGround: false,
+      facing: 1, // 1 derecha, -1 izquierda
+      hp: 100,
+      maxHp: 100,
+      level: 1,
+      xp: 0,
+      xpToNext: 50,
+      atkPower: 25,
+      wood: 0,
+      stone: 0,
+      kills: 0,
+      attackTimer: 0,
+      attackCooldown: 0,
+      invulnTimer: 0,
+      walkCycle: 0
+    };
+
+    // Partes del castillo a construir (zona derecha del mapa)
+    const castle = {
+      towerLeft: { built: false, woodCost: 3, stoneCost: 2, x: 690, y: GROUND_Y - 125, w: 58, h: 125 },
+      wall:      { built: false, woodCost: 5, stoneCost: 5, x: 748, y: GROUND_Y - 82,  w: 96, h: 82  },
+      keep:      { built: false, woodCost: 8, stoneCost: 8, x: 844, y: GROUND_Y - 165, w: 76, h: 165 }
+    };
+
+    // Plataformas tipo Mario
+    const platforms = [
+      { x: 180, y: 330, w: 120, h: 16 },
+      { x: 350, y: 265, w: 130, h: 16 },
+      { x: 520, y: 320, w: 115, h: 16 },
+      { x: 240, y: 185, w: 110, h: 16 }
+    ];
+
+    let enemies = [];
+    let drops = [];
+    let particles = [];
+    let floatingTexts = [];
+    let keys = {};
+    let enemySpawnTimer = 1.2;
+    let nodeSpawnTimer = 4.0;
+    let gameOver = false;
+    let victoryBannerTimer = 0;
+
+    // Nodos de recursos recolectables en el mapa
+    let resourceNodes = [
+      { type: "wood", x: 225, y: 298, w: 28, h: 32, active: true, respawn: 0 },
+      { type: "stone", x: 400, y: 233, w: 30, h: 32, active: true, respawn: 0 },
+      { type: "wood", x: 565, y: GROUND_Y - 32, w: 28, h: 32, active: true, respawn: 0 },
+      { type: "stone", x: 140, y: GROUND_Y - 30, w: 30, h: 30, active: true, respawn: 0 }
+    ];
+
+    function addFloatingText(text, x, y, color = "#fde047") {
+      floatingTexts.push({ text, x, y, color, life: 1.0, vy: -42 });
+    }
+
+    function spawnParticles(x, y, color, count = 8) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 50 + Math.random() * 140;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 40,
+          size: 3 + Math.random() * 4,
+          color,
+          life: 0.45 + Math.random() * 0.25
+        });
+      }
+    }
+
+    function spawnEnemy() {
+      const maxActive = 4 + Math.min(4, Math.floor(player.level / 2));
+      if (enemies.length >= maxActive) return;
+
+      const fromLeft = Math.random() < 0.35;
+      const x = fromLeft ? 20 : 660;
+      const isBat = player.level >= 2 && Math.random() < 0.4;
+
+      if (isBat) {
+        enemies.push({
+          type: "bat",
+          x,
+          y: 170 + Math.random() * 90,
+          w: 34,
+          h: 26,
+          vx: (fromLeft ? 1 : -1) * (110 + player.level * 8),
+          vy: 0,
+          baseY: 200,
+          phase: Math.random() * Math.PI * 2,
+          hp: 35 + (player.level - 1) * 12,
+          maxHp: 35 + (player.level - 1) * 12,
+          dmg: 10 + (player.level - 1) * 3,
+          xpReward: 22,
+          hitFlash: 0
+        });
+      } else {
+        enemies.push({
+          type: "shadow",
+          x,
+          y: GROUND_Y - 36,
+          w: 34,
+          h: 36,
+          vx: (fromLeft ? 1 : -1) * (85 + player.level * 6),
+          vy: 0,
+          hp: 45 + (player.level - 1) * 15,
+          maxHp: 45 + (player.level - 1) * 15,
+          dmg: 12 + (player.level - 1) * 3,
+          xpReward: 18,
+          hitFlash: 0
+        });
+      }
+    }
+
+    function spawnDrop(x, y) {
+      const count = 1 + (Math.random() < 0.45 ? 1 : 0);
+      for (let i = 0; i < count; i++) {
+        const type = Math.random() < 0.5 ? "wood" : "stone";
+        drops.push({
+          type,
+          x: x + (Math.random() * 20 - 10),
+          y: y - 10,
+          w: 20,
+          h: 20,
+          vx: (Math.random() - 0.5) * 150,
+          vy: -240 - Math.random() * 90,
+          onGround: false,
+          life: 14
+        });
+      }
+    }
+
+    function gainXp(amount) {
+      player.xp += amount;
+      while (player.xp >= player.xpToNext) {
+        player.xp -= player.xpToNext;
+        player.level += 1;
+        player.xpToNext = Math.floor(player.xpToNext * 1.35);
+        player.maxHp += 20;
+        player.hp = player.maxHp;
+        player.atkPower += 8;
+        addFloatingText(`¡NIVEL ${player.level}! +VIDA & +ATAQUE`, player.x, player.y - 24, "#38bdf8");
+        spawnParticles(player.x + player.w / 2, player.y + player.h / 2, "#38bdf8", 16);
+      }
+    }
+
+    function performAttack() {
+      if (gameOver || player.attackCooldown > 0) return;
+      player.attackTimer = 0.16;
+      player.attackCooldown = 0.32;
+
+      const reachW = 46;
+      const reachH = 38;
+      const hitX = player.facing === 1 ? player.x + player.w : player.x - reachW;
+      const hitY = player.y + 4;
+
+      // Golpear enemigos
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        if (rectsOverlap(hitX, hitY, reachW, reachH, e.x, e.y, e.w, e.h)) {
+          e.hp -= player.atkPower;
+          e.hitFlash = 0.12;
+          e.vx = player.facing * 160;
+          addFloatingText(`-${player.atkPower}`, e.x + e.w / 2, e.y - 8, "#fca5a5");
+          spawnParticles(e.x + e.w / 2, e.y + e.h / 2, "#c084fc", 7);
+
+          if (e.hp <= 0) {
+            player.kills += 1;
+            gainXp(e.xpReward);
+            spawnDrop(e.x + e.w / 2, e.y + e.h / 2);
+            spawnParticles(e.x + e.w / 2, e.y + e.h / 2, "#a855f7", 14);
+            addFloatingText(`+${e.xpReward} EXP`, e.x, e.y - 18, "#93c5fd");
+            enemies.splice(i, 1);
+          }
+        }
+      }
+
+      // Golpear nodos de recursos (madera y piedra)
+      for (const node of resourceNodes) {
+        if (!node.active) continue;
+        if (rectsOverlap(hitX, hitY, reachW, reachH, node.x, node.y, node.w, node.h)) {
+          node.active = false;
+          node.respawn = 7.0;
+          if (node.type === "wood") {
+            player.wood += 2;
+            addFloatingText("+2 Madera", node.x, node.y - 10, "#86efac");
+            spawnParticles(node.x + 14, node.y + 14, "#4ade80", 9);
+          } else {
+            player.stone += 2;
+            addFloatingText("+2 Piedra", node.x, node.y - 10, "#cbd5e1");
+            spawnParticles(node.x + 14, node.y + 14, "#94a3b8", 9);
+          }
+          gainXp(8);
+        }
+      }
+    }
+
+    function buildPart(partKey) {
+      if (gameOver) return;
+      const part = castle[partKey];
+      if (!part || part.built) return;
+
+      if (player.wood >= part.woodCost && player.stone >= part.stoneCost) {
+        player.wood -= part.woodCost;
+        player.stone -= part.stoneCost;
+        part.built = true;
+        gainXp(35);
+        spawnParticles(part.x + part.w / 2, part.y + part.h / 2, "#fbbf24", 20);
+        addFloatingText("¡CONSTRUIDO!", part.x + part.w / 2 - 20, part.y - 12, "#fde047");
+
+        if (castle.towerLeft.built && castle.wall.built && castle.keep.built) {
+          victoryBannerTimer = 4.5;
+          addFloatingText("¡CASTILLO COMPLETO!", canvas.width / 2 - 70, 120, "#4ade80");
+        }
+        updateHUD();
+      } else {
+        addFloatingText("Faltan materiales", player.x, player.y - 16, "#f87171");
+      }
+    }
+
+    function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    function resetGame() {
+      player.x = 90;
+      player.y = GROUND_Y - player.h;
+      player.vx = 0;
+      player.vy = 0;
+      player.hp = player.maxHp;
+      player.invulnTimer = 1.0;
+      enemies = [];
+      drops = [];
+      floatingTexts = [];
+      gameOver = false;
+      updateHUD();
+    }
+
+    function updateHUD() {
+      document.getElementById("lvlText").textContent = player.level;
+      document.getElementById("hpText").textContent = `${Math.max(0, Math.ceil(player.hp))}/${player.maxHp}`;
+      document.getElementById("hpBar").style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+
+      document.getElementById("xpText").textContent = `${player.xp}/${player.xpToNext}`;
+      document.getElementById("xpBar").style.width = `${Math.min(100, (player.xp / player.xpToNext) * 100)}%`;
+
+      document.getElementById("woodText").textContent = player.wood;
+      document.getElementById("stoneText").textContent = player.stone;
+      document.getElementById("killsText").textContent = player.kills;
+
+      const mapBtns = [
+        { key: "towerLeft", id: "btnTowerLeft", label: "[1] Torre Oeste (🪵3 🪨2)" },
+        { key: "wall", id: "btnWall", label: "[2] Muralla Real (🪵5 🪨5)" },
+        { key: "keep", id: "btnKeep", label: "[3] Torreón Sombrío (🪵8 🪨8)" }
+      ];
+
+      for (const item of mapBtns) {
+        const btn = document.getElementById(item.id);
+        const p = castle[item.key];
+        if (p.built) {
+          btn.textContent = `✓ ${item.label.split("(")[0].replace(/\[\d\]\s*/, "")} (Listo)`;
+          btn.disabled = true;
+          btn.classList.add("built");
+        } else {
+          btn.textContent = item.label;
+          btn.disabled = player.wood < p.woodCost || player.stone < p.stoneCost;
+          btn.classList.remove("built");
+        }
+      }
+    }
+
+    function update(dt) {
+      if (victoryBannerTimer > 0) victoryBannerTimer -= dt;
+
+      if (gameOver) {
+        if (keys["KeyR"]) resetGame();
+        return;
+      }
+
+      // Timers jugador
+      if (player.attackTimer > 0) player.attackTimer -= dt;
+      if (player.attackCooldown > 0) player.attackCooldown -= dt;
+      if (player.invulnTimer > 0) player.invulnTimer -= dt;
+
+      // Movimiento horizontal
+      let moveDir = 0;
+      if (keys["ArrowLeft"] || keys["KeyA"]) moveDir -= 1;
+      if (keys["ArrowRight"] || keys["KeyD"]) moveDir += 1;
+
+      if (moveDir !== 0) {
+        player.vx = moveDir * player.speed;
+        player.facing = moveDir;
+        player.onGround && (player.walkCycle += dt * 11);
+      } else {
+        player.vx *= Math.pow(0.001, dt);
+        if (Math.abs(player.vx) < 8) player.vx = 0;
+        player.walkCycle = 0;
+      }
+
+      // Salto
+      const jumpPressed = keys["Space"] || keys["ArrowUp"] || keys["KeyW"];
+      if (jumpPressed && player.onGround) {
+        player.vy = -player.jumpForce;
+        player.onGround = false;
+        spawnParticles(player.x + player.w / 2, player.y + player.h, "#94a3b8", 5);
+      }
+
+      // Gravedad y posición
+      const prevY = player.y;
+      player.vy += GRAVITY * dt;
+      player.x += player.vx * dt;
+      player.y += player.vy * dt;
+
+      // Límites horizontales
+      if (player.x < 8) player.x = 8;
+      if (player.x + player.w > canvas.width - 8) player.x = canvas.width - 8 - player.w;
+
+      player.onGround = false;
+
+      // Colisión con plataformas al caer
+      if (player.vy >= 0) {
+        for (const plat of platforms) {
+          const withinX = player.x + player.w - 6 > plat.x && player.x + 6 < plat.x + plat.w;
+          if (withinX && prevY + player.h <= plat.y + 8 && player.y + player.h >= plat.y) {
+            player.y = plat.y - player.h;
+            player.vy = 0;
+            player.onGround = true;
+          }
+        }
+      }
+
+      // Colisión con suelo
+      if (player.y + player.h >= GROUND_Y) {
+        player.y = GROUND_Y - player.h;
+        player.vy = 0;
+        player.onGround = true;
+      }
+
+      // Spawn de monstruos
+      enemySpawnTimer -= dt;
+      if (enemySpawnTimer <= 0) {
+        spawnEnemy();
+        enemySpawnTimer = Math.max(1.4, 3.2 - player.level * 0.15);
+      }
+
+      // Reaparición de nodos de madera y piedra
+      for (const node of resourceNodes) {
+        if (!node.active) {
+          node.respawn -= dt;
+          if (node.respawn <= 0) {
+            node.active = true;
+            spawnParticles(node.x + node.w / 2, node.y + node.h / 2, "#fde047", 6);
+          }
+        }
+      }
+
+      // Actualizar enemigos
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        if (e.hitFlash > 0) e.hitFlash -= dt;
+
+        // Perseguir suavemente al jugador si está cerca
+        const dx = (player.x + player.w / 2) - (e.x + e.w / 2);
+        const dist = Math.abs(dx);
+        if (dist < 320 && dist > 18) {
+          const desiredDir = Math.sign(dx);
+          const chaseSpeed = e.type === "bat" ? 115 : 88;
+          e.vx += (desiredDir * chaseSpeed - e.vx) * Math.min(1, dt * 4);
+        }
+
+        e.x += e.vx * dt;
+
+        if (e.type === "bat") {
+          e.phase += dt * 5;
+          e.y += Math.cos(e.phase) * 42 * dt;
+        } else {
+          e.vy += GRAVITY * dt;
+          e.y += e.vy * dt;
+          if (e.y + e.h >= GROUND_Y) {
+            e.y = GROUND_Y - e.h;
+            e.vy = 0;
+          }
+        }
+
+        if (e.x < 10) {
+          e.x = 10;
+          e.vx = Math.abs(e.vx);
+        } else if (e.x + e.w > canvas.width - 10) {
+          e.x = canvas.width - 10 - e.w;
+          e.vx = -Math.abs(e.vx);
+        }
+
+        // Daño al jugador
+        if (player.invulnTimer <= 0 && rectsOverlap(player.x + 4, player.y + 4, player.w - 8, player.h - 6, e.x, e.y, e.w, e.h)) {
+          player.hp -= e.dmg;
+          player.invulnTimer = 0.85;
+          player.vy = -260;
+          player.vx = (dx >= 0 ? -1 : 1) * 200;
+          addFloatingText(`-${e.dmg} HP`, player.x, player.y - 12, "#ef4444");
+          spawnParticles(player.x + player.w / 2, player.y + player.h / 2, "#ef4444", 10);
+
+          if (player.hp <= 0) {
+            player.hp = 0;
+            gameOver = true;
+          }
+        }
+      }
+
+      // Actualizar gotas (madera y piedra)
+      for (let i = drops.length - 1; i >= 0; i--) {
+        const d = drops[i];
+        d.life -= dt;
+        if (d.life <= 0) {
+          drops.splice(i, 1);
+          continue;
+        }
+
+        if (!d.onGround) {
+          d.vy += GRAVITY * 0.8 * dt;
+          d.x += d.vx * dt;
+          d.y += d.vy * dt;
+          if (d.y + d.h >= GROUND_Y) {
+            d.y = GROUND_Y - d.h;
+            d.vy = 0;
+            d.vx = 0;
+            d.onGround = true;
+          }
+        }
+
+        // Recoger al tocar
+        if (rectsOverlap(player.x, player.y, player.w, player.h, d.x - 4, d.y - 4, d.w + 8, d.h + 8)) {
+          if (d.type === "wood") {
+            player.wood += 1;
+            addFloatingText("+1 Madera", d.x, d.y - 8, "#4ade80");
+          } else {
+            player.stone += 1;
+            addFloatingText("+1 Piedra", d.x, d.y - 8, "#cbd5e1");
+          }
+          drops.splice(i, 1);
+        }
+      }
+
+      // Partículas
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life -= dt;
+        p.vy += 380 * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // Textos flotantes
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.life -= dt;
+        ft.y += ft.vy * dt;
+        if (ft.life <= 0) floatingTexts.splice(i, 1);
+      }
+
+      updateHUD();
+    }
+
+    function drawBackground() {
+      // Cielo nocturno con degradado
+      const sky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+      sky.addColorStop(0, "#0b0f21");
+      sky.addColorStop(0.6, "#1a213d");
+      sky.addColorStop(1, "#272947");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, canvas.width, GROUND_Y);
+
+      // Luna
+      ctx.fillStyle = "rgba(254, 249, 195, 0.85)";
+      ctx.beginPath();
+      ctx.arc(790, 82, 34, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Montañas lejanas
+      ctx.fillStyle = "#13182e";
+      ctx.beginPath();
+      ctx.moveTo(0, GROUND_Y);
+      ctx.lineTo(140, 250);
+      ctx.lineTo(310, GROUND_Y);
+      ctx.lineTo(480, 230);
+      ctx.lineTo(660, GROUND_Y);
+      ctx.lineTo(860, 260);
+      ctx.lineTo(canvas.width, GROUND_Y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Suelo
+      ctx.fillStyle = "#2b2438";
+      ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+
+      // Césped sombrío superior
+      ctx.fillStyle = "#2f5d46";
+      ctx.fillRect(0, GROUND_Y, canvas.width, 10);
+    }
+
+    function drawPlatforms() {
+      for (const plat of platforms) {
+        ctx.fillStyle = "#4b3b5c";
+        ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+        ctx.fillStyle = "#6c8a68";
+        ctx.fillRect(plat.x, plat.y, plat.w, 4);
+      }
+    }
+
+    function drawCastle() {
+      // Marca de zona de construcción en el suelo
+      ctx.strokeStyle = "rgba(250, 204, 21, 0.28)";
+      ctx.setLineDash([6, 6]);
+      ctx.strokeRect(686, GROUND_Y - 172, 238, 172);
+      ctx.setLineDash([]);
+
+      // Torre Oeste
+      if (castle.towerLeft.built) {
+        const t = castle.towerLeft;
+        ctx.fillStyle = "#64748b";
+        ctx.fillRect(t.x, t.y, t.w, t.h);
+        // Almenas
+        for (let i = 0; i < 3; i++) {
+          ctx.fillRect(t.x + i * 20, t.y - 10, 14, 10);
+        }
+        // Techo
+        ctx.fillStyle = "#7f1d1d";
+        ctx.beginPath();
+        ctx.moveTo(t.x - 6, t.y - 10);
+        ctx.lineTo(t.x + t.w / 2, t.y - 42);
+        ctx.lineTo(t.x + t.w + 6, t.y - 10);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        drawBlueprint(castle.towerLeft, "Torre 1");
+      }
+
+      // Muralla Central
+      if (castle.wall.built) {
+        const w = castle.wall;
+        ctx.fillStyle = "#526075";
+        ctx.fillRect(w.x, w.y, w.w, w.h);
+        for (let i = 0; i < 4; i++) {
+          ctx.fillRect(w.x + 6 + i * 24, w.y - 9, 14, 9);
+        }
+        // Puerta
+        ctx.fillStyle = "#3b2314";
+        ctx.fillRect(w.x + 32, w.y + w.h - 38, 32, 38);
+      } else {
+        drawBlueprint(castle.wall, "Muralla 2");
+      }
+
+      // Torreón Sombrío
+      if (castle.keep.built) {
+        const k = castle.keep;
+        ctx.fillStyle = "#475569";
+        ctx.fillRect(k.x, k.y, k.w, k.h);
+        for (let i = 0; i < 4; i++) {
+          ctx.fillRect(k.x + 4 + i * 19, k.y - 11, 13, 11);
+        }
+        ctx.fillStyle = "#581c87";
+        ctx.beginPath();
+        ctx.moveTo(k.x - 8, k.y - 11);
+        ctx.lineTo(k.x + k.w / 2, tOrPeak(k));
+        ctx.lineTo(k.x + k.w + 8, k.y - 11);
+        ctx.closePath();
+        ctx.fill();
+
+        // Ventana brillante
+        ctx.fillStyle = "#fde047";
+        ctx.fillRect(k.x + k.w / 2 - 7, k.y + 34, 14, 22);
+      } else {
+        drawBlueprint(castle.keep, "Torreón 3");
+      }
+    }
+
+    function tOrPeak(k) {
+      return k.y - 54;
+    }
+
+    function drawBlueprint(box, label) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.45)";
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(box.x, box.y, box.w, box.h);
+      ctx.fillStyle = "rgba(148, 163, 184, 0.55)";
+      ctx.font = "11px sans-serif";
+      ctx.fillText(label, box.x + 8, box.y + 18);
+      ctx.restore();
+    }
+
+    function drawResourceNodes() {
+      for (const node of resourceNodes) {
+        if (!node.active) continue;
+        if (node.type === "wood") {
+          // Tronco / arbusto de madera
+          ctx.fillStyle = "#78350f";
+          ctx.fillRect(node.x + 8, node.y + 12, 12, 20);
+          ctx.fillStyle = "#22c55e";
+          ctx.beginPath();
+          ctx.arc(node.x + 14, node.y + 10, 12, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Roca de piedra
+          ctx.fillStyle = "#64748b";
+          ctx.beginPath();
+          ctx.moveTo(node.x + 2, node.y + node.h);
+          ctx.lineTo(node.x + 7, node.y + 6);
+          ctx.lineTo(node.x + 22, node.y + 4);
+          ctx.lineTo(node.x + node.w - 2, node.y + node.h);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    }
+
+    function drawDrops() {
+      for (const d of drops) {
+        if (d.type === "wood") {
+          ctx.fillStyle = "#92400e";
+          ctx.fillRect(d.x, d.y + 4, d.w, d.h - 8);
+          ctx.fillStyle = "#d97706";
+          ctx.fillRect(d.x + 2, d.y + 6, d.w - 4, d.h - 12);
+        } else {
+          ctx.fillStyle = "#94a3b8";
+          ctx.beginPath();
+          ctx.arc(d.x + d.w / 2, d.y + d.h / 2, d.w / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    function drawKnight() {
+      if (player.invulnTimer > 0 && Math.floor(player.invulnTimer * 18) % 2 === 0) {
+        return; // Parpadeo de invulnerabilidad
+      }
+
+      const bob = player.onGround ? Math.sin(player.walkCycle) * 2.5 : 0;
+
+      // Capa
+      ctx.fillStyle = "#dc2626";
+      const capeX = player.facing === 1 ? player.x - 5 : player.x + player.w - 5;
+      ctx.fillRect(capeX, player.y + 12 + bob, 10, 22);
+
+      // Armadura / torso
+      ctx.fillStyle = "#cbd5e1";
+      ctx.fillRect(player.x + 5, player.y + 12 + bob, player.w - 10, 20);
+
+      // Casco
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillRect(player.x + 6, player.y + bob, player.w - 12, 14);
+
+      // Visera oscura
+      ctx.fillStyle = "#0f172a";
+      const visorX = player.facing === 1 ? player.x + 15 : player.x + 8;
+      ctx.fillRect(visorX, player.y + 5 + bob, 9, 4);
+
+      // Piernas
+      const legOffset = player.onGround ? Math.sin(player.walkCycle) * 5 : 3;
+      ctx.fillStyle = "#475569";
+      ctx.fillRect(player.x + 7, player.y + 32, 7, 12 - Math.max(0, legOffset));
+      ctx.fillRect(player.x + 18, player.y + 32, 7, 12 - Math.max(0, -legOffset));
+
+      // Espada y arco de ataque
+      if (player.attackTimer > 0) {
+        ctx.save();
+        ctx.strokeStyle = "#fde047";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        const cx = player.x + player.w / 2;
+        const cy = player.y + player.h / 2;
+        if (player.facing === 1) {
+          ctx.arc(cx + 10, cy, 28, -0.75, 0.75);
+        } else {
+          ctx.arc(cx - 10, cy, 28, Math.PI - 0.75, Math.PI + 0.75);
+        }
+        ctx.stroke();
+
+        // Hoja de espada
+        ctx.fillStyle = "#f8fafc";
+        const swordX = player.facing === 1 ? player.x + player.w : player.x - 24;
+        ctx.fillRect(swordX, player.y + 16, 24, 6);
+        ctx.restore();
+      } else {
+        // Espada en reposo
+        ctx.fillStyle = "#94a3b8";
+        const idleSwordX = player.facing === 1 ? player.x + player.w - 2 : player.x - 4;
+        ctx.fillRect(idleSwordX, player.y + 14 + bob, 6, 18);
+      }
+    }
+
+    function drawEnemies() {
+      for (const e of enemies) {
+        ctx.fillStyle = e.hitFlash > 0 ? "#ffffff" : (e.type === "bat" ? "#7e22ce" : "#4c1d95");
+        ctx.fillRect(e.x, e.y, e.w, e.h);
+
+        // Ojos brillantes de sombra
+        ctx.fillStyle = "#f43f5e";
+        ctx.fillRect(e.x + 6, e.y + 8, 5, 5);
+        ctx.fillRect(e.x + e.w - 11, e.y + 8, 5, 5);
+
+        // Barra de vida del monstruo
+        const hpRatio = Math.max(0, e.hp / e.maxHp);
+        ctx.fillStyle = "rgba(15, 23, 42, 0.8)";
+        ctx.fillRect(e.x, e.y - 8, e.w, 4);
+        ctx.fillStyle = "#f43f5e";
+        ctx.fillRect(e.x, e.y - 8, e.w * hpRatio, 4);
+      }
+    }
+
+    function drawParticlesAndText() {
+      for (const p of particles) {
+        ctx.globalAlpha = Math.max(0, p.life * 1.5);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+      ctx.globalAlpha = 1;
+
+      for (const ft of floatingTexts) {
+        ctx.globalAlpha = Math.min(1, ft.life * 1.3);
+        ctx.fillStyle = ft.color;
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText(ft.text, ft.x, ft.y);
+      }
+      ctx.globalAlpha = 1;
+
+      if (victoryBannerTimer > 0) {
+        ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+        ctx.fillRect(canvas.width / 2 - 210, 52, 420, 48);
+        ctx.strokeStyle = "#4ade80";
+        ctx.strokeRect(canvas.width / 2 - 210, 52, 420, 48);
+        ctx.fillStyle = "#86efac";
+        ctx.font = "bold 18px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("🏰 ¡Has reconstruido el Reino de las Sombras!", canvas.width / 2, 82);
+        ctx.textAlign = "left";
+      }
+
+      if (gameOver) {
+        ctx.fillStyle = "rgba(10, 12, 20, 0.82)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#f87171";
+        ctx.font = "bold 32px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("HAS CAÍDO EN LAS SOMBRAS", canvas.width / 2, canvas.height / 2 - 14);
+        ctx.fillStyle = "#e5e7eb";
+        ctx.font = "16px sans-serif";
+        ctx.fillText("Pulsa [R] para levantarte y seguir luchando", canvas.width / 2, canvas.height / 2 + 22);
+        ctx.textAlign = "left";
+      }
+    }
+
+    function render() {
+      drawBackground();
+      drawCastle();
+      drawPlatforms();
+      drawResourceNodes();
+      drawDrops();
+      drawEnemies();
+      drawKnight();
+      drawParticlesAndText();
+    }
+
+    let lastTime = performance.now();
+    function loop(now) {
+      const dt = Math.min(0.05, (now - lastTime) / 1000);
+      lastTime = now;
+      update(dt);
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener("keydown", (e) => {
+      keys[e.code] = true;
+      if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
+        e.preventDefault();
+      }
+      if (e.code === "KeyJ" || e.code === "KeyZ") {
+        performAttack();
+      }
+      if (e.code === "Digit1") buildPart("towerLeft");
+      if (e.code === "Digit2") buildPart("wall");
+      if (e.code === "Digit3") buildPart("keep");
+    });
+
+    window.addEventListener("keyup", (e) => {
+      keys[e.code] = false;
+    });
+
+    canvas.addEventListener("mousedown", () => {
+      performAttack();
+    });
+
+    updateHUD();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
