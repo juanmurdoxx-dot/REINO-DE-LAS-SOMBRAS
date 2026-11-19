@@ -1,1 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Reino de las Sombras</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Biblioteca Three.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+        }
+    }
+    </script>
+</head>
+
+<body>
+
+    <!-- Interfaz superior -->
+    <header id="hud">
+        <div class="game-title">
+            REINO DE LAS SOMBRAS
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                💎 Cristales:
+                <strong id="crystalCount">0</strong>
+            </div>
+
+            <div class="stat">
+                ❤️ Vida:
+                <strong id="health">100/100</strong>
+                <div class="bar"><div id="healthFill"></div></div>
+            </div>
+
+            <div class="stat">
+                ⚔️ Nivel:
+                <strong id="level">1</strong>
+            </div>
+
+            <div class="stat">
+                ✨ XP:
+                <strong id="xp">0/100</strong>
+                <div class="bar"><div id="xpFill"></div></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Menú inicial -->
+    <main id="startScreen">
+        <div class="menu-box">
+
+            <p class="subtitle">UNA AVENTURA FANTÁSTICA</p>
+
+            <h1>REINO DE LAS SOMBRAS</h1>
+
+            <p class="description">
+                Las sombras han despertado. Recoge cristales para sanar,
+                vence monstruos para ganar experiencia y mejora a tu héroe.
+            </p>
+
+            <div class="instructions">
+                <p><strong>W A S D</strong> - Mover personaje</p>
+                <p><strong>ESPACIO</strong> - Saltar</p>
+                <p><strong>F</strong> o <strong>CLIC</strong> - Atacar con la espada</p>
+                <p><strong>ARRASTRAR RATÓN</strong> - Girar cámara</p>
+                <p><strong>RUEDA</strong> - Acercar cámara</p>
+            </div>
+
+            <button id="startButton">
+                COMENZAR AVENTURA
+            </button>
+
+        </div>
+    </main>
+
+    <!-- Menú de mejoras al subir de nivel -->
+    <div id="levelUp" class="overlay hidden">
+        <div class="menu-box">
+            <p class="subtitle">NUEVO PODER</p>
+            <h1>¡SUBISTE DE NIVEL!</h1>
+            <p class="description">Elige una mejora para tu héroe</p>
+            <div id="upgradeChoices"></div>
+        </div>
+    </div>
+
+    <!-- Pantalla de derrota -->
+    <div id="gameOver" class="overlay hidden">
+        <div class="menu-box">
+            <p class="subtitle">LAS SOMBRAS TE ALCANZARON</p>
+            <h1>HAS CAÍDO</h1>
+            <p class="description" id="finalStats"></p>
+            <button id="restartButton">VOLVER A INTENTAR</button>
+        </div>
+    </div>
+
+    <!-- Destello rojo al recibir daño -->
+    <div id="hurtFlash"></div>
+
+    <!-- Mensajes del juego -->
+    <div id="message"></div>
+
+    <!-- Interfaz inferior -->
+    <footer id="controls">
+        WASD: Moverse | ESPACIO: Saltar | F o CLIC: Atacar | RATÓN: Cámara
+    </footer>
+
+    <!-- Pantalla de carga y errores -->
+    <div id="loading">
+        CARGANDO REINO DE LAS SOMBRAS...
+    </div>
+
+    <script type="module" src="script.js"></script>
+
+</body>
+</html>
 
